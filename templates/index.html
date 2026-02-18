@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="sort-bar">
+  Sort by:
+  <a href="{{ url_for('index', filter=filter_by, sort='created_at') }}" class="{{ 'active' if sort_by == 'created_at' }}">Date Created</a>
+  <a href="{{ url_for('index', filter=filter_by, sort='priority') }}" class="{{ 'active' if sort_by == 'priority' }}">Priority</a>
+  <a href="{{ url_for('index', filter=filter_by, sort='due_date') }}" class="{{ 'active' if sort_by == 'due_date' }}">Due Date</a>
+</div>
+
+{% if tasks %}
+<ul class="task-list">
+  {% for task in tasks %}
+  <li class="task-item {{ 'completed' if task.completed }}">
+    <form method="post" action="{{ url_for('toggle', task_id=task.id) }}" class="toggle-form">
+      <button type="submit" class="toggle-btn" title="Toggle complete">
+        {{ '✓' if task.completed else '' }}
+      </button>
+    </form>
+    <div class="task-content">
+      <div class="task-header">
+        <span class="task-title">{{ task.title }}</span>
+        <span class="priority priority-{{ task.priority }}">{{ task.priority }}</span>
+      </div>
+      {% if task.description %}
+        <p class="task-desc">{{ task.description[:100] }}{{ '...' if task.description|length > 100 }}</p>
+      {% endif %}
+      {% if task.due_date %}
+        <span class="due-date">Due: {{ task.due_date }}</span>
+      {% endif %}
+    </div>
+    <div class="task-actions">
+      <a href="{{ url_for('edit', task_id=task.id) }}" class="btn-edit">Edit</a>
+      <form method="post" action="{{ url_for('delete', task_id=task.id) }}" class="delete-form">
+        <button type="submit" class="btn-delete">Delete</button>
+      </form>
+    </div>
+  </li>
+  {% endfor %}
+</ul>
+{% else %}
+<p class="empty-state">No tasks found. <a href="{{ url_for('add') }}">Add one!</a></p>
+{% endif %}
+{% endblock %}
