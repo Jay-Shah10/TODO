@@ -1,14 +1,6 @@
-# TODO
+# Dice Roller
 
-A simple to-do list web app built with Flask. Tasks are stored in a local JSON file — no database required.
-
-## Features
-
-- Create, edit, and delete tasks
-- Set priority levels (high, medium, low) and optional due dates
-- Mark tasks as complete/incomplete
-- Filter by status (all, active, completed)
-- Sort by creation date, priority, or due date
+A simple dice rolling web app built with Flask. Click the button to roll a six-sided die.
 
 ## Setup
 

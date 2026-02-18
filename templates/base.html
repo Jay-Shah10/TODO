@@ -3,25 +3,14 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>To-Do List</title>
+  <title>Dice Roller</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
   <div class="container">
     <header>
-      <h1><a href="{{ url_for('index') }}">To-Do List</a></h1>
-      <nav>
-        <a href="{{ url_for('index', filter='all') }}" class="{{ 'active' if filter_by|default('all') == 'all' }}">All</a>
-        <a href="{{ url_for('index', filter='active') }}" class="{{ 'active' if filter_by|default('') == 'active' }}">Active</a>
-        <a href="{{ url_for('index', filter='completed') }}" class="{{ 'active' if filter_by|default('') == 'completed' }}">Completed</a>
-        <a href="{{ url_for('add') }}" class="btn-add">+ Add Task</a>
-      </nav>
+      <h1>Dice Roller</h1>
     </header>
-    {% with messages = get_flashed_messages(with_categories=true) %}
-      {% for category, message in messages %}
-        <div class="flash flash-{{ category }}">{{ message }}</div>
-      {% endfor %}
-    {% endwith %}
     <main>
       {% block content %}{% endblock %}
     </main>

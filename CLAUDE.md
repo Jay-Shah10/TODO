@@ -17,16 +17,9 @@ pip install -r requirements.txt
 
 ## Architecture
 
-Single-file Flask app (`app.py`) serving a to-do list at `http://127.0.0.1:5000`.
+Single-file Flask app (`app.py`) serving a dice roller at `http://127.0.0.1:5000`.
 
-- **Storage**: JSON file at `data/tasks.json` — read/written via `load_tasks()`/`save_tasks()` helpers in `app.py`. The `data/` directory is auto-created on first write.
-- **Routes**: All defined in `app.py` — index (`/`), add, edit, delete, toggle. All mutations use POST; state-changing actions never use GET.
-- **Templates**: Jinja2 templates in `templates/` extending `base.html`. No JavaScript — pure HTML forms with POST+redirect.
-- **Styling**: Single `static/style.css`, no CSS framework. Priority badges use `.priority-high`/`.priority-medium`/`.priority-low` classes.
-
-## Key Patterns
-
-- Task IDs are 8-char hex strings from `uuid4`. Looked up via linear scan (fine for JSON-scale data).
-- Dates stored as ISO strings (`YYYY-MM-DD` for due_date, full ISO for created_at). Null due_date is valid.
-- Jinja2 auto-escapes HTML — use real Unicode characters in templates, not HTML entities.
-- `filter_by` (all/active/completed) and `sort_by` (created_at/priority/due_date) are query params on the index route.
+- **Routes**: `GET /` renders the page, `POST /roll` returns a JSON result `{"result": N}` where N is 1-6.
+- **Templates**: Jinja2 templates in `templates/` extending `base.html`. JavaScript fetch call for rolling without page reload.
+- **Styling**: Single `static/style.css`, no CSS framework.
+- **Deployment**: Configured for Vercel via `vercel.json` using `@vercel/python` builder.
