@@ -5,11 +5,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Dice Roller</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎲</text></svg>">
 </head>
 <body>
   <div class="container">
     <header>
       <h1>Dice Roller</h1>
+      <div class="subtitle">Fortune favours the bold</div>
     </header>
     <main>
       {% block content %}{% endblock %}

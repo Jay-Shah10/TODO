@@ -2,27 +2,100 @@
 
 {% block content %}
 <div class="dice-area">
-  <div class="dice-display" id="dice-result">?</div>
-  <button class="btn-roll" id="roll-btn" onclick="rollDice()">Roll Dice</button>
+  <div class="dice-stage">
+    <div class="dice-cube" id="dice-cube">
+      <!-- Face 1 -->
+      <div class="dice-face face-1"><div class="dot"></div></div>
+      <!-- Face 2 -->
+      <div class="dice-face face-2"><div class="dot"></div><div class="dot"></div></div>
+      <!-- Face 3 -->
+      <div class="dice-face face-3"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
+      <!-- Face 4 -->
+      <div class="dice-face face-4"><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
+      <!-- Face 5 -->
+      <div class="dice-face face-5"><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
+      <!-- Face 6 -->
+      <div class="dice-face face-6"><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
+    </div>
+  </div>
+  <div class="dice-shadow" id="dice-shadow"></div>
+
+  <div class="result-display" id="result-display"></div>
+  <div class="result-label" id="result-label">Your roll</div>
+
+  <button class="btn-roll" id="roll-btn" onclick="rollDice()">Cast the Dice</button>
+
+  <div class="history" id="history"></div>
 </div>
 
 <script>
+const FACE_ROTATIONS = {
+  1: { rx: 0, ry: 0 },
+  2: { rx: 0, ry: 180 },
+  3: { rx: 0, ry: -90 },
+  4: { rx: 0, ry: 90 },
+  5: { rx: -90, ry: 0 },
+  6: { rx: 90, ry: 0 },
+};
+
+let rolling = false;
+const history = [];
+
 async function rollDice() {
+  if (rolling) return;
+  rolling = true;
+
   const btn = document.getElementById('roll-btn');
-  const display = document.getElementById('dice-result');
+  const cube = document.getElementById('dice-cube');
+  const shadow = document.getElementById('dice-shadow');
+  const resultDisplay = document.getElementById('result-display');
+  const resultLabel = document.getElementById('result-label');
 
   btn.disabled = true;
-  display.classList.add('rolling');
-  display.textContent = '...';
+  resultDisplay.classList.remove('visible', 'pop');
+  resultLabel.classList.remove('visible');
 
+  // Fetch result
   const response = await fetch('/roll', { method: 'POST' });
   const data = await response.json();
+  const result = data.result;
+
+  // Calculate end rotation to show the correct face
+  const base = FACE_ROTATIONS[result];
+  // Add full spins for drama
+  const endRx = base.rx + 360 * 2;
+  const endRy = base.ry + 360 * 2;
+
+  cube.style.setProperty('--end-rx', endRx + 'deg');
+  cube.style.setProperty('--end-ry', endRy + 'deg');
+
+  cube.classList.add('rolling');
+  shadow.classList.add('rolling');
 
   setTimeout(() => {
-    display.textContent = data.result;
-    display.classList.remove('rolling');
+    cube.classList.remove('rolling');
+    shadow.classList.remove('rolling');
+    // Set final resting position
+    cube.style.transform = `rotateX(${base.rx}deg) rotateY(${base.ry}deg)`;
+
+    // Show result number
+    resultDisplay.textContent = result;
+    resultDisplay.classList.add('visible', 'pop');
+    resultLabel.classList.add('visible');
+
+    // Add to history
+    history.push(result);
+    if (history.length > 10) history.shift();
+    renderHistory();
+
     btn.disabled = false;
-  }, 300);
+    rolling = false;
+  }, 750);
+}
+
+function renderHistory() {
+  const el = document.getElementById('history');
+  el.innerHTML = history.map(v => `<div class="history-pip">${v}</div>`).join('');
 }
 </script>
 {% endblock %}
