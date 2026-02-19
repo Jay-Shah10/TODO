@@ -2,22 +2,42 @@
 
 {% block content %}
 <div class="dice-area">
+
+  <!-- Die type selector -->
+  <div class="die-selector">
+    <button class="die-type-btn active" data-sides="6" onclick="selectDie(6)">d6</button>
+    <button class="die-type-btn" data-sides="10" onclick="selectDie(10)">d10</button>
+    <button class="die-type-btn" data-sides="12" onclick="selectDie(12)">d12</button>
+  </div>
+
   <div class="dice-stage">
+    <!-- d6: 3D cube -->
     <div class="dice-cube" id="dice-cube">
-      <!-- Face 1 -->
       <div class="dice-face face-1"><div class="dot"></div></div>
-      <!-- Face 2 -->
       <div class="dice-face face-2"><div class="dot"></div><div class="dot"></div></div>
-      <!-- Face 3 -->
       <div class="dice-face face-3"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
-      <!-- Face 4 -->
       <div class="dice-face face-4"><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
-      <!-- Face 5 -->
       <div class="dice-face face-5"><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
-      <!-- Face 6 -->
       <div class="dice-face face-6"><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
     </div>
+
+    <!-- d10: diamond polygon SVG -->
+    <div class="poly-die" id="die-d10" style="display:none">
+      <svg viewBox="0 0 120 140" xmlns="http://www.w3.org/2000/svg">
+        <polygon class="die-shape" points="60,4 116,50 60,136 4,50"/>
+        <text class="die-number" id="d10-number" x="60" y="82" text-anchor="middle">—</text>
+      </svg>
+    </div>
+
+    <!-- d12: pentagon polygon SVG -->
+    <div class="poly-die" id="die-d12" style="display:none">
+      <svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+        <polygon class="die-shape" points="60,4 114,42 94,106 26,106 6,42"/>
+        <text class="die-number" id="d12-number" x="60" y="72" text-anchor="middle">—</text>
+      </svg>
+    </div>
   </div>
+
   <div class="dice-shadow" id="dice-shadow"></div>
 
   <div class="result-display" id="result-display"></div>
@@ -39,14 +59,34 @@ const FACE_ROTATIONS = {
 };
 
 let rolling = false;
+let selectedSides = 6;
 const history = [];
+
+function selectDie(sides) {
+  selectedSides = sides;
+
+  // Update button active states
+  document.querySelectorAll('.die-type-btn').forEach(btn => {
+    btn.classList.toggle('active', parseInt(btn.dataset.sides) === sides);
+  });
+
+  // Show/hide die visuals
+  document.getElementById('dice-cube').style.display = sides === 6 ? '' : 'none';
+  document.getElementById('die-d10').style.display = sides === 10 ? '' : 'none';
+  document.getElementById('die-d12').style.display = sides === 12 ? '' : 'none';
+
+  // Clear result when switching dice
+  const resultDisplay = document.getElementById('result-display');
+  const resultLabel = document.getElementById('result-label');
+  resultDisplay.classList.remove('visible', 'pop');
+  resultLabel.classList.remove('visible');
+}
 
 async function rollDice() {
   if (rolling) return;
   rolling = true;
 
   const btn = document.getElementById('roll-btn');
-  const cube = document.getElementById('dice-cube');
   const shadow = document.getElementById('dice-shadow');
   const resultDisplay = document.getElementById('result-display');
   const resultLabel = document.getElementById('result-label');
@@ -55,47 +95,72 @@ async function rollDice() {
   resultDisplay.classList.remove('visible', 'pop');
   resultLabel.classList.remove('visible');
 
-  // Fetch result
-  const response = await fetch('/roll', { method: 'POST' });
+  const response = await fetch('/roll', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ sides: selectedSides }),
+  });
   const data = await response.json();
   const result = data.result;
 
-  // Calculate end rotation to show the correct face
-  const base = FACE_ROTATIONS[result];
-  // Add full spins for drama
-  const endRx = base.rx + 360 * 2;
-  const endRy = base.ry + 360 * 2;
+  if (selectedSides === 6) {
+    const cube = document.getElementById('dice-cube');
+    const base = FACE_ROTATIONS[result];
+    const endRx = base.rx + 360 * 2;
+    const endRy = base.ry + 360 * 2;
 
-  cube.style.setProperty('--end-rx', endRx + 'deg');
-  cube.style.setProperty('--end-ry', endRy + 'deg');
+    cube.style.setProperty('--end-rx', endRx + 'deg');
+    cube.style.setProperty('--end-ry', endRy + 'deg');
+    cube.classList.add('rolling');
+    shadow.classList.add('rolling');
 
-  cube.classList.add('rolling');
-  shadow.classList.add('rolling');
+    setTimeout(() => {
+      cube.classList.remove('rolling');
+      shadow.classList.remove('rolling');
+      cube.style.transform = `rotateX(${base.rx}deg) rotateY(${base.ry}deg)`;
+      showResult(result, btn);
+    }, 750);
+  } else {
+    // Polygon die animation
+    const dieEl = document.getElementById(selectedSides === 10 ? 'die-d10' : 'die-d12');
+    const numEl = document.getElementById(selectedSides === 10 ? 'd10-number' : 'd12-number');
 
-  setTimeout(() => {
-    cube.classList.remove('rolling');
-    shadow.classList.remove('rolling');
-    // Set final resting position
-    cube.style.transform = `rotateX(${base.rx}deg) rotateY(${base.ry}deg)`;
+    numEl.textContent = '—';
+    shadow.classList.add('rolling');
+    dieEl.classList.add('poly-rolling');
 
-    // Show result number
-    resultDisplay.textContent = result;
-    resultDisplay.classList.add('visible', 'pop');
-    resultLabel.classList.add('visible');
+    setTimeout(() => {
+      dieEl.classList.remove('poly-rolling');
+      shadow.classList.remove('rolling');
+      numEl.textContent = result;
+      dieEl.classList.add('poly-reveal');
+      setTimeout(() => dieEl.classList.remove('poly-reveal'), 400);
+      showResult(result, btn);
+    }, 750);
+  }
+}
 
-    // Add to history
-    history.push(result);
-    if (history.length > 10) history.shift();
-    renderHistory();
+function showResult(result, btn) {
+  const resultDisplay = document.getElementById('result-display');
+  const resultLabel = document.getElementById('result-label');
 
-    btn.disabled = false;
-    rolling = false;
-  }, 750);
+  resultDisplay.textContent = result;
+  resultDisplay.classList.add('visible', 'pop');
+  resultLabel.classList.add('visible');
+
+  history.push({ value: result, sides: selectedSides });
+  if (history.length > 10) history.shift();
+  renderHistory();
+
+  btn.disabled = false;
+  rolling = false;
 }
 
 function renderHistory() {
   const el = document.getElementById('history');
-  el.innerHTML = history.map(v => `<div class="history-pip">${v}</div>`).join('');
+  el.innerHTML = history.map(h =>
+    `<div class="history-pip" title="d${h.sides}">${h.value}</div>`
+  ).join('');
 }
 </script>
 {% endblock %}
